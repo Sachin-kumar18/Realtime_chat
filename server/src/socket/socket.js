@@ -42,7 +42,7 @@ function initSocket(server) {
         }
 
         const message = await Message.create({ senderId, receiverId, content });
-        const receiverSocketId = onlineUsers.get(receiverId);
+        const receiverSocketId = onlineUsers.get(receiverId?.toString());
         socket.emit("message:sent", message);
 
         if (receiverSocketId) {
@@ -61,14 +61,14 @@ function initSocket(server) {
     });
 
     socket.on("typing:start", ({ senderId, receiverId }) => {
-      const receiverSocketId = onlineUsers.get(receiverId);
+      const receiverSocketId = onlineUsers.get(receiverId?.toString());
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("typing:start", { senderId });
       }
     });
 
     socket.on("typing:stop", ({ senderId, receiverId }) => {
-      const receiverSocketId = onlineUsers.get(receiverId);
+      const receiverSocketId = onlineUsers.get(receiverId?.toString());
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("typing:stop", { senderId });
       }
@@ -91,19 +91,21 @@ function initSocket(server) {
     });
 
     socket.on("disconnect", async () => {
-      try {
-        const userId = socket.userId;
-        if (!userId) return;
+      const userId = socket.userId;
+      if (!userId) return;
 
-        onlineUsers.delete(userId);
-        io.emit("user:status", { userId, isOnline: false });
-
-        await User.findByIdAndUpdate(userId, { isOnline: false });
-
-        console.log("Socket disconnected:", socket.id);
-      } catch (err) {
-        console.error(err);
-      }
+      setTimeout(async () => {
+        try {
+          const currentSocketId = onlineUsers.get(userId);
+          if (currentSocketId === socket.id) {
+            onlineUsers.delete(userId);
+            io.emit("user:status", { userId, isOnline: false });
+            await User.findByIdAndUpdate(userId, { isOnline: false });
+          }
+        } catch (error) {
+          console.error("Error handling disconnect for user:", userId, error);
+        }
+      }, 3000);
     });
   });
 

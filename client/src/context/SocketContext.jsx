@@ -15,15 +15,22 @@ export function SocketProvider({ children }) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
+        setSocket(null);
+        setOnlineUsers([]);
       }
       return;
     }
 
+    if (socketRef.current) return;
+
     const sock = io(
       import.meta.env.VITE_SOCKET_URL || "http://localhost:5000",
       {
-        transports: ["polling","websocket"],
+        transports: ["websocket"],
         auth: { token: localStorage.getItem("token") },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       },
     );
 
@@ -46,9 +53,10 @@ export function SocketProvider({ children }) {
     });
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      sock.disconnect();
       socketRef.current = null;
       setSocket(null);
+      setOnlineUsers([]);
     };
   }, [user]);
 

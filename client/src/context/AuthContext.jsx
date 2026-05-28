@@ -5,7 +5,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
@@ -18,8 +18,11 @@ export function AuthProvider({ children }) {
       try {
         const { data } = await getMe();
         setUser(data.user);
-      } catch {
-        localStorage.removeItem("token");
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem("token");
+        }
       } finally {
         setLoading(false);
       }
