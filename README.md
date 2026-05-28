@@ -2,7 +2,7 @@
 
 A real-time chat app built with React, Node.js, Socket.IO, and MongoDB.
 
-**Live Demo:** [Click here](https://realtime-chat-etfiqe0ix-sachins-projects-22e16704.vercel.app)
+**Live Demo:** [Click here](https://realtime-chat-git-main-sachins-projects-22e16704.vercel.app)
 
 ---
 
